@@ -1,0 +1,3 @@
+<?php require_once __DIR__.'/../config/database.php'; require_once __DIR__.'/../includes/functions.php';
+$st=$pdo->query("SELECT p.id,p.project_code,p.project_name,p.project_status,p.priority_score,p.priority_level,p.project_deadline,p.total_order_value,c.customer_name,u.full_name owner_name FROM projects p JOIN customers c ON c.id=p.customer_id JOIN users u ON u.id=p.owner_user_id WHERE p.is_archived=0 ORDER BY FIELD(p.project_status,'Đang triển khai Đơn hàng','Triển khai mẫu','Đang tiếp cận, tư vấn','D/A hoàn thành'), p.priority_score DESC, p.project_deadline ASC, p.total_order_value DESC, FIELD(p.customer_level,'KH VIP','Lấy thường xuyên','KH thường')");
+jsonResponse($st->fetchAll());
