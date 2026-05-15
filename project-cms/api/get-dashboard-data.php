@@ -1,0 +1,17 @@
+<?php require_once __DIR__.'/../config/database.php'; require_once __DIR__.'/../includes/functions.php';
+$kpi=[];
+$kpi['total_projects']=(int)$pdo->query("SELECT COUNT(*) FROM projects WHERE is_archived=0")->fetchColumn();
+$kpi['in_order']=(int)$pdo->query("SELECT COUNT(*) FROM projects WHERE project_status='Đang triển khai Đơn hàng' AND is_archived=0")->fetchColumn();
+$kpi['in_sample']=(int)$pdo->query("SELECT COUNT(*) FROM projects WHERE project_status='Triển khai mẫu' AND is_archived=0")->fetchColumn();
+$kpi['in_consult']=(int)$pdo->query("SELECT COUNT(*) FROM projects WHERE project_status='Đang tiếp cận, tư vấn' AND is_archived=0")->fetchColumn();
+$kpi['done']=(int)$pdo->query("SELECT COUNT(*) FROM projects WHERE project_status='D/A hoàn thành' AND is_archived=0")->fetchColumn();
+$kpi['late_projects']=(int)$pdo->query("SELECT COUNT(*) FROM projects WHERE project_deadline < CURDATE() AND project_status!='D/A hoàn thành' AND is_archived=0")->fetchColumn();
+$kpi['late_tasks']=(int)$pdo->query("SELECT COUNT(*) FROM tasks WHERE task_deadline < CURDATE() AND task_status!='Xong'")->fetchColumn();
+$kpi['total_order_value']=(float)$pdo->query("SELECT COALESCE(SUM(total_order_value),0) FROM projects WHERE is_archived=0")->fetchColumn();
+$kpi['target_revenue']=(float)$pdo->query("SELECT COALESCE(SUM(target_revenue),0) FROM sales_targets WHERE year=YEAR(CURDATE())")->fetchColumn();
+$kpi['actual_revenue']=(float)$pdo->query("SELECT COALESCE(SUM(actual_revenue),0) FROM sales_targets WHERE year=YEAR(CURDATE())")->fetchColumn();
+$kpi['completion_rate']=$kpi['target_revenue']>0?round(($kpi['actual_revenue']/$kpi['target_revenue'])*100,2):0;
+$status=$pdo->query("SELECT project_status, COUNT(*) c FROM projects WHERE is_archived=0 GROUP BY project_status")->fetchAll();
+$priority=$pdo->query("SELECT priority_level, COUNT(*) c FROM projects WHERE is_archived=0 GROUP BY priority_level")->fetchAll();
+$sales=$pdo->query("SELECT u.full_name, st.target_revenue, st.actual_revenue FROM sales_targets st JOIN users u ON u.id=st.user_id WHERE st.year=YEAR(CURDATE())")->fetchAll();
+jsonResponse(['kpi'=>$kpi,'status'=>$status,'priority'=>$priority,'sales'=>$sales]);
